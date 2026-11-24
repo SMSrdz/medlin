@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Médellín — simulation urbaine 3D interactive. Sept projets d'urbanisme social, de 1991 à aujourd'hui." />
+  <meta name="theme-color" content="#06100b" />
+  <title>Médellín — Simulation urbaine</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2306100b'/%3E%3Cpath d='M5 25 12 10l7 15' stroke='%2348d6a0' stroke-width='1.6' fill='none' stroke-linejoin='round'/%3E%3Cpath d='M4 11 28 5' stroke='%23eee9dc' stroke-width='1'/%3E%3Ccircle cx='21' cy='7' r='2' fill='%23eee9dc'/%3E%3C/svg%3E" />
+</head>
+<body class="is-loading era-after time-night">
+
+  <!-- ===================== LOADER ===================== -->
+  <div class="loader" id="loader">
+    <div class="loader-grid" aria-hidden="true"></div>
+    <div class="loader-top">
+      <span>Médellín · Colombie</span>
+      <span>6°14′N · 75°34′O</span>
+    </div>
+    <div class="loader-center">
+      <p class="loader-kicker">Simulation urbaine · 1991 — 2026</p>
+      <h1 class="loader-title">Médellín<span>.</span></h1>
+      <p class="loader-sub">Anatomie d'un miracle urbain</p>
+      <div class="loader-track" aria-hidden="true"><span id="loaderBar"></span></div>
+      <div class="loader-meta">
+        <span id="loaderStatus">Construction de la vallée…</span>
+        <span id="loaderPercent">0 %</span>
+      </div>
+    </div>
+    <div class="loader-foot">
+      <span>Sept projets · Trois décennies</span>
+      <span>Three.js · WebGL</span>
+    </div>
+  </div>
+
+  <!-- ===================== 3D WORLD ===================== -->
+  <canvas id="world" aria-label="Simulation 3D interactive de Médellín : vallée, quartiers de colline, métro, téléphérique et projets urbains."></canvas>
+  <div class="scene-grade" aria-hidden="true"></div>
+
+  <div class="frame" aria-hidden="true">
+    <i class="frame-corner tl"></i>
+    <i class="frame-corner tr"></i>
+    <i class="frame-corner bl"></i>
+    <i class="frame-corner br"></i>
+    <span class="frame-label">Vallée d'Aburrá · 1 495 m</span>
+  </div>
+
+  <div class="hotspots" id="hotspots" aria-hidden="true"></div>
+
+  <div class="webgl-fallback" id="webglFallback" hidden>
+    <p>WebGL n'est pas disponible sur ce navigateur.</p>
+    <span>La simulation 3D nécessite un navigateur récent avec accélération matérielle.</span>
+  </div>
+
+  <!-- ===================== TOP HUD ===================== -->
+  <header class="hud-top">
+    <button class="brand" id="brandHome" type="button" aria-label="Revenir à la vue d'ensemble">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <path d="M4 26 12 10l8 16" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M3 12 29 5" stroke="currentColor" stroke-width="1" opacity=".55"/>
+          <circle cx="22" cy="7.4" r="2" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">Médellín</span>
+        <span class="brand-sub">Simulation urbaine</span>
+      </span>
+    </button>
+
+    <div class="top-status" aria-live="polite">
+      <span class="live-dot" aria-hidden="true"></span>
+      <span id="statusLine">Aujourd'hui · Nuit</span>
+      <span class="top-coord">6°14′N · 75°34′O</span>
+    </div>
+
+    <div class="top-actions">
+      <button class="hud-btn" id="annotationsToggle" type="button" aria-pressed="true" title="Afficher ou masquer les annotations">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 18s-6-4.2-6-9a6 6 0 0 1 12 0c0 4.8-6 9-6 9Z" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="9" r="2.2" stroke="currentColor" stroke-width="1.3"/></svg>
+        <span>Annotations</span>
+      </button>
+      <button class="hud-btn" id="timeToggle" type="button" title="Passer du jour à la nuit">
+        <svg class="icon-moon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M16 12.5A6.5 6.5 0 0 1 7.5 4 6.5 6.5 0 1 0 16 12.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <svg class="icon-sun" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="3.4" stroke="currentColor" stroke-width="1.4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M15.7 4.3l-1.4 1.4M5.7 14.3l-1.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span id="timeLabel">Nuit</span>
+      </button>
+      <button class="hud-btn is-accent" id="tourBtn" type="button" aria-pressed="false" title="Lancer la visite guidée">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 4.5v11l8-5.5-8-5.5Z" fill="currentColor"/></svg>
+        <span>Visite</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===================== PROJECT RAIL ===================== -->
+  <aside class="hud-rail" aria-label="Projets urbains">
+    <div class="rail-head">
+      <span>Projets</span>
+      <span class="rail-count">07</span>
+    </div>
+    <div class="rail-list" id="projectRail"></div>
+    <div class="rail-metrics" aria-label="Indicateurs urbains">
+      <div class="rail-metrics-head">
+        <span>Indicateurs</span>
+        <span>1991 → 2026</span>
+      </div>
+      <div class="metric" data-metric="connectivite">
+        <div class="metric-row"><span>Connectivité</span><strong>24</strong></div>
+        <div class="metric-bar"><i></i></div>
+      </div>
+      <div class="metric" data-metric="espace">
+        <div class="metric-row"><span>Espace public</span><strong>16</strong></div>
+        <div class="metric-bar"><i></i></div>
+      </div>
+      <div class="metric" data-metric="securite">
+        <div class="metric-row"><span>Sécurité</span><strong>11</strong></div>
+        <div class="metric-bar"><i></i></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== PROJECT PANEL ===================== -->
+  <aside class="hud-panel" id="projectPanel" aria-live="polite" aria-label="Détails du projet" aria-hidden="true">
+    <div class="panel-head">
+      <span class="panel-num" id="panelNum">01</span>
+      <span class="panel-meta" id="panelMeta">Mobilité · 2004</span>
+      <button class="panel-close" id="panelClose" type="button" aria-label="Fermer le panneau">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <h2 class="panel-title" id="panelTitle">Metrocable — ligne K</h2>
+    <p class="panel-tagline" id="panelTagline"></p>
+    <div class="panel-stats" id="panelStats"></div>
+
+    <button class="panel-more-btn" id="panelMore" type="button" aria-expanded="false" aria-controls="panelMoreBody">
+      <span>Contexte</span><span class="panel-more-sign">+</span>
+    </button>
+    <div class="panel-more" id="panelMoreBody" hidden>
+      <p class="panel-body" id="panelBody"></p>
+      <p class="panel-note" id="panelNote"></p>
+    </div>
+
+    <div class="panel-tour" id="panelTour" hidden>
+      <div class="tour-head">
+        <span>Visite guidée</span>
+        <span id="tourStepLabel">Étape 1 / 7</span>
+      </div>
+      <div class="tour-track"><span id="tourProgress"></span></div>
+      <div class="tour-actions">
+        <button id="tourPrev" type="button" aria-label="Projet précédent">←</button>
+        <button id="tourNext" type="button">Suivant →</button>
+        <button id="tourExit" class="tour-exit" type="button">Quitter</button>
+      </div>
+    </div>
+
+    <div class="panel-nav">
+      <button id="prevProject" type="button" aria-label="Projet précédent">←</button>
+      <span id="panelStep">01 / 07</span>
+      <button id="nextProject" type="button" aria-label="Projet suivant">→</button>
+    </div>
+  </aside>
+
+  <!-- ===================== BOTTOM HUD ===================== -->
+  <footer class="hud-bottom">
+    <div class="era-block">
+      <span class="hud-label">Chronologie</span>
+      <div class="era-switch" id="eraSwitch" role="group" aria-label="Période simulée">
+        <button type="button" data-set-era="before">1991</button>
+        <button type="button" data-set-era="after" class="is-active">Aujourd'hui</button>
+        <span class="era-thumb" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <p class="scene-hint" id="sceneHint">Glisser pour orbiter · cliquer une balise</p>
+
+    <div class="view-controls">
+      <button id="zoomOut" type="button" aria-label="Dézoomer" title="Dézoomer">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+      <button id="zoomIn" type="button" aria-label="Zoomer" title="Zoomer">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+      <button id="resetView" type="button" aria-label="Vue d'ensemble" title="Vue d'ensemble">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 9a6 6 0 1 1 1.5 4M4 4v5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three.module.js"
+      }
+    }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
